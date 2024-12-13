@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visa Stay Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .container { max-width: 800px; }
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Visa Stay Calculator</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form action="/calculate" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Visa Type</label>
+                        <select name="visaType" class="form-select" required>
+                            <option value="tourist">Tourist (90 days)</option>
+                            <option value="business">Business (180 days)</option>
+                            <option value="student">Student (365 days)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Entry Date</label>
+                        <input type="date" name="entryDate" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Exit Date</label>
+                        <input type="date" name="exitDate" class="form-control" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Calculate Stay</button>
+                </form>
+            </div>
+        </div>
+
+        {{if .Result}}
+        <div class="result-box">
+            <h3>Results Summary</h3>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h5>📋 Visa Information</h5>
+                    <p>Type: {{.Result.VisaType}}<br>
+                    Entry: {{.Result.EntryDate}}<br>
+                    Exit: {{.Result.ExitDate}}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>⏱ Duration Details</h5>
+                    <p>Total Stay: {{.Result.TotalDays}} days<br>
+                    Maximum Allowed: {{.Result.MaxAllowedDays}} days<br>
+                    Remaining: {{.Result.RemainingDays}} days</p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <h5>⚠ Status</h5>
+                {{if lt .Result.RemainingDays 0}}
+                    <div class="alert alert-danger">❌ WARNING: You have exceeded your allowed stay duration!</div>
+                {{else if le .Result.RemainingDays 7}}
+                    <div class="alert alert-warning">⚠ WARNING: Your visa is about to expire soon!</div>
+                {{else}}
+                    <div class="alert alert-success">✅ Your stay is within allowed duration</div>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+    </div>
+</body>
+</html>

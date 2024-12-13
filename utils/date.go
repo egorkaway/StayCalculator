@@ -7,6 +7,12 @@ import (
 
 // ParseDate converts a date string in YYYY-MM-DD format to time.Time
 func ParseDate(dateStr string) (time.Time, error) {
+	// Handle empty date string
+	if dateStr == "" {
+		return time.Time{}, fmt.Errorf("date cannot be empty")
+	}
+
+	// Parse the date
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid date format. Please use YYYY-MM-DD")
@@ -19,7 +25,9 @@ func ParseDate(dateStr string) (time.Time, error) {
 	}
 
 	// Don't allow dates in the past
-	if date.Before(time.Now().AddDate(0, 0, -1)) {
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	if date.Before(today) {
 		return time.Time{}, fmt.Errorf("date cannot be in the past")
 	}
 

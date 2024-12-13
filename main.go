@@ -1,99 +1,90 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"os"
+	"html/template"
+	"log"
+	"net/http"
 	"strings"
+	"time"
 	"visa-calculator/visa"
 )
 
-func getInput(reader *bufio.Reader, prompt string) (string, error) {
-	for {
-		fmt.Print(prompt)
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			if err.Error() == "EOF" {
-				continue // Allow retry on EOF
-			}
-			return "", err
-		}
-		trimmedInput := strings.TrimSpace(input)
-		if trimmedInput != "" {
-			return trimmedInput, nil
-		}
-		fmt.Println("Input cannot be empty. Please try again.")
-	}
+type PageData struct {
+	Result *VisaResult
+	Error  string
 }
 
-func getValidVisaType(reader *bufio.Reader) (string, error) {
-	for {
-		visaType, err := getInput(reader, "Enter visa type (tourist/business/student): ")
-		if err != nil {
-			return "", err
-		}
-
-		visaType = strings.ToLower(visaType)
-		if visa.IsValidVisaType(visaType) {
-			return visaType, nil
-		}
-
-		fmt.Println("Error: Invalid visa type. Please enter tourist, business, or student.")
-	}
+type VisaResult struct {
+	VisaType       string
+	EntryDate      string
+	ExitDate       string
+	TotalDays      int
+	MaxAllowedDays int
+	RemainingDays  int
 }
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Println("Visa Stay Calculator")
-	fmt.Println("-------------------")
-
-	// Get valid visa type with retry
-	visaType, err := getValidVisaType(reader)
+	// Load templates
+	tmpl, err := template.ParseFiles("templates/index.html")
 	if err != nil {
-		fmt.Printf("Error reading input: %v\n", err)
-		return
+		log.Fatalf("Error parsing template: %v", err)
 	}
 
-	// Get dates with validation
-	var entryDate, exitDate string
-	for {
-		var err error
-		entryDate, err = getInput(reader, "Enter entry date (YYYY-MM-DD): ")
-		if err != nil {
-			fmt.Printf("Error reading input: %v\n", err)
+	// Handle main page
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		data := &PageData{
+			Result: nil,
+			Error:  "",
+		}
+		if err := tmpl.Execute(w, data); err != nil {
+			log.Printf("Error rendering template: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	})
+
+	// Handle calculation
+	http.HandleFunc("/calculate", func(w http.ResponseWriter, r *http.Request) {
+		data := &PageData{}
+
+		if r.Method != http.MethodPost {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
 
-		exitDate, err = getInput(reader, "Enter exit date (YYYY-MM-DD): ")
-		if err != nil {
-			fmt.Printf("Error reading input: %v\n", err)
-			return
-		}
+		// Get form values
+		visaType := strings.ToLower(r.FormValue("visaType"))
+		entryDate := r.FormValue("entryDate")
+		exitDate := r.FormValue("exitDate")
 
-		// Try to calculate stay duration
+		// Calculate stay
 		calc := visa.NewCalculator()
 		result, err := calc.CalculateStay(visaType, entryDate, exitDate)
+
 		if err != nil {
-			fmt.Printf("Error: %v\nPlease try again.\n\n", err)
-			continue
+			log.Printf("Calculation error: %v", err)
+			data.Error = err.Error()
+		} else {
+			// Create view model
+			data.Result = &VisaResult{
+				VisaType:       strings.Title(visaType),
+				EntryDate:      result.EntryDate.Format("2006-01-02"),
+				ExitDate:       result.ExitDate.Format("2006-01-02"),
+				TotalDays:      result.TotalDays,
+				MaxAllowedDays: result.MaxAllowedDays,
+				RemainingDays:  result.RemainingDays,
+			}
 		}
 
-		// Display results
-		fmt.Println("\nStay Duration Results")
-		fmt.Println("--------------------")
-		fmt.Printf("Visa Type: %s\n", strings.Title(visaType))
-		fmt.Printf("Entry Date: %s\n", result.EntryDate.Format("2006-01-02"))
-		fmt.Printf("Exit Date: %s\n", result.ExitDate.Format("2006-01-02"))
-		fmt.Printf("Total Stay Duration: %d days\n", result.TotalDays)
-		fmt.Printf("Maximum Allowed Stay: %d days\n", result.MaxAllowedDays)
-		fmt.Printf("Remaining Days: %d days\n", result.RemainingDays)
-
-		if result.RemainingDays < 0 {
-			fmt.Println("\nWARNING: You have exceeded your allowed stay duration!")
-		} else if result.RemainingDays <= 7 {
-			fmt.Println("\nWARNING: Your visa is about to expire soon!")
+		if err := tmpl.Execute(w, data); err != nil {
+			log.Printf("Template error: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
-		break
+	})
+
+	// Start server
+	log.Println("Server starting on http://0.0.0.0:3000")
+	if err := http.ListenAndServe("0.0.0.0:3000", nil); err != nil {
+		log.Fatal(err)
 	}
 }

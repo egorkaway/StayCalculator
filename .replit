@@ -9,10 +9,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Visa Calculator"
+args = "Visa Calculator Web"
 
 [[workflows.workflow]]
-name = "Visa Calculator"
+name = "Visa Calculator Web"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -24,6 +24,7 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "go run main.go"
+waitForPort = 3000
 
 [deployment]
 run = ["sh", "-c", "go run main.go"]
