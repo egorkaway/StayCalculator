@@ -21,7 +21,8 @@ func calculateHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req CalculateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 		return
 	}
 
@@ -35,7 +36,14 @@ func calculateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(result)
+	// Create a response structure that matches what the frontend expects
+	response := map[string]interface{}{
+		"TotalDays":      result.TotalDays,
+		"MaxAllowedDays": result.MaxAllowedDays,
+		"RemainingDays":  result.RemainingDays,
+	}
+
+	json.NewEncoder(w).Encode(response)
 }
 
 func main() {

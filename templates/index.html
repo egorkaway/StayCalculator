@@ -50,11 +50,14 @@
         document.getElementById('visaForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(this);
+            // Format dates to YYYY-MM-DD
+            const entryDate = new Date(this.entryDate.value);
+            const exitDate = new Date(this.exitDate.value);
+            
             const data = {
-                visaType: formData.get('visaType'),
-                entryDate: formData.get('entryDate'),
-                exitDate: formData.get('exitDate')
+                visaType: this.visaType.value,
+                entryDate: entryDate.toISOString().split('T')[0],
+                exitDate: exitDate.toISOString().split('T')[0]
             };
             
             try {
@@ -70,7 +73,7 @@
                 const resultDiv = document.getElementById('result');
                 resultDiv.style.display = 'block';
                 
-                if (response.ok) {
+                if (!result.error) {
                     resultDiv.innerHTML = `
                         <div class="alert alert-success">
                             <h4>Stay Duration Results</h4>
