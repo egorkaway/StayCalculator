@@ -6,12 +6,6 @@
     <style>
         body { padding: 20px; }
         .container { max-width: 800px; }
-        .result-box {
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-        }
     </style>
 </head>
 <body>
@@ -20,7 +14,7 @@
         
         <div class="card">
             <div class="card-body">
-                <form action="/calculate" method="POST">
+                <form id="visaForm">
                     <div class="mb-3">
                         <label class="form-label">Visa Type</label>
                         <select name="visaType" class="form-select" required>
@@ -45,35 +39,11 @@
             </div>
         </div>
 
-        {{if .Result}}
-        <div class="result-box">
-            <h3>Results Summary</h3>
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <h5>📋 Visa Information</h5>
-                    <p>Type: {{.Result.VisaType}}<br>
-                    Entry: {{.Result.EntryDate}}<br>
-                    Exit: {{.Result.ExitDate}}</p>
-                </div>
-                <div class="col-md-6">
-                    <h5>⏱ Duration Details</h5>
-                    <p>Total Stay: {{.Result.TotalDays}} days<br>
-                    Maximum Allowed: {{.Result.MaxAllowedDays}} days<br>
-                    Remaining: {{.Result.RemainingDays}} days</p>
-                </div>
-            </div>
-            <div class="mt-3">
-                <h5>⚠ Status</h5>
-                {{if lt .Result.RemainingDays 0}}
-                    <div class="alert alert-danger">❌ WARNING: You have exceeded your allowed stay duration!</div>
-                {{else if le .Result.RemainingDays 7}}
-                    <div class="alert alert-warning">⚠ WARNING: Your visa is about to expire soon!</div>
-                {{else}}
-                    <div class="alert alert-success">✅ Your stay is within allowed duration</div>
-                {{end}}
+        <div id="result" class="mt-4" style="display: none;">
+            <div class="alert alert-info">
+                <h4>Results will appear here</h4>
             </div>
         </div>
-        {{end}}
     </div>
 </body>
 </html>
