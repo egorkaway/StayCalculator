@@ -24,12 +24,5 @@ func ParseDate(dateStr string) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("year must be between 2000 and 2100")
 	}
 
-	// Don't allow dates in the past
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	if date.Before(today) {
-		return time.Time{}, fmt.Errorf("date cannot be in the past")
-	}
-
 	return date, nil
 }
