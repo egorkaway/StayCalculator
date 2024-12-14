@@ -8,9 +8,8 @@ import (
 )
 
 type CalculateRequest struct {
-	VisaType  string `json:"visaType"`
-	EntryDate string `json:"entryDate"`
-	ExitDate  string `json:"exitDate"`
+	VisaType string        `json:"visaType"`
+	Periods  []visa.Period `json:"periods"`
 }
 
 func calculateHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +26,7 @@ func calculateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	calculator := visa.NewCalculator()
-	result, err := calculator.CalculateStay(req.VisaType, req.EntryDate, req.ExitDate)
+	result, err := calculator.CalculateStay(req.VisaType, req.Periods)
 	
 	w.Header().Set("Content-Type", "application/json")
 	
@@ -38,6 +37,7 @@ func calculateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create a response structure that matches what the frontend expects
 	response := map[string]interface{}{
+		"Periods":        result.Periods,
 		"TotalDays":      result.TotalDays,
 		"MaxAllowedDays": result.MaxAllowedDays,
 		"RemainingDays":  result.RemainingDays,

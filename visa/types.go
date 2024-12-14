@@ -9,6 +9,11 @@ var validVisaTypes = map[string]bool{
 	"student":    true,
 }
 
+// Period represents a single stay period with entry and exit dates
+type Period struct {
+	EntryDate string `json:"entryDate"`
+	ExitDate  string `json:"exitDate"`
+}
 // IsValidVisaType checks if the provided visa type is valid
 func IsValidVisaType(visaType string) bool {
 	_, exists := validVisaTypes[visaType]

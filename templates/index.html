@@ -26,14 +26,26 @@
                         </select>
                     </div>
                     
-                    <div class="mb-3">
-                        <label class="form-label">Entry Date</label>
-                        <input type="date" name="entryDate" class="form-control" required>
+                    <div id="periods">
+                        <div class="period mb-3">
+                            <div class="row">
+                                <div class="col">
+                                    <label class="form-label">Entry Date</label>
+                                    <input type="date" class="form-control entry-date" required>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label">Exit Date</label>
+                                    <input type="date" class="form-control exit-date" required>
+                                </div>
+                                <div class="col-auto d-flex align-items-end">
+                                    <button type="button" class="btn btn-danger mb-3 remove-period" style="display: none;">Remove</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Exit Date</label>
-                        <input type="date" name="exitDate" class="form-control" required>
+                        <button type="button" class="btn btn-secondary" id="addPeriod">Add Another Period</button>
                     </div>
                     
                     <button type="submit" class="btn btn-primary">Calculate Stay</button>
@@ -56,22 +68,64 @@
             return `${day}/${month}/${year}`;
         }
 
-        function parseDate(dateStr) {
-            const [day, month, year] = dateStr.split('/');
-            return new Date(year, month - 1, day);
+        function createPeriodHTML() {
+            return `
+                <div class="period mb-3">
+                    <div class="row">
+                        <div class="col">
+                            <label class="form-label">Entry Date</label>
+                            <input type="date" class="form-control entry-date" required>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Exit Date</label>
+                            <input type="date" class="form-control exit-date" required>
+                        </div>
+                        <div class="col-auto d-flex align-items-end">
+                            <button type="button" class="btn btn-danger mb-3 remove-period">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('addPeriod').addEventListener('click', function() {
+            const periodsDiv = document.getElementById('periods');
+            periodsDiv.insertAdjacentHTML('beforeend', createPeriodHTML());
+            updateRemoveButtons();
+        });
+
+        document.getElementById('periods').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-period')) {
+                e.target.closest('.period').remove();
+                updateRemoveButtons();
+            }
+        });
+
+        function updateRemoveButtons() {
+            const periods = document.querySelectorAll('.period');
+            periods.forEach((period, index) => {
+                const removeButton = period.querySelector('.remove-period');
+                removeButton.style.display = periods.length > 1 ? 'block' : 'none';
+            });
         }
 
         document.getElementById('visaForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Format dates to YYYY-MM-DD
-            const entryDate = new Date(this.entryDate.value);
-            const exitDate = new Date(this.exitDate.value);
+            const periods = [];
+            document.querySelectorAll('.period').forEach(periodDiv => {
+                const entryDate = new Date(periodDiv.querySelector('.entry-date').value);
+                const exitDate = new Date(periodDiv.querySelector('.exit-date').value);
+                
+                periods.push({
+                    entryDate: formatDate(entryDate),
+                    exitDate: formatDate(exitDate)
+                });
+            });
             
             const data = {
                 visaType: this.visaType.value,
-                entryDate: formatDate(entryDate),
-                exitDate: formatDate(exitDate)
+                periods: periods
             };
             
             try {
@@ -88,9 +142,21 @@
                 resultDiv.style.display = 'block';
                 
                 if (!result.error) {
+                    let periodsHtml = result.Periods.map((period, index) => `
+                        <div class="mb-2">
+                            <strong>Period ${index + 1}:</strong>
+                            <span>${formatDate(new Date(period.EntryDate))} to ${formatDate(new Date(period.ExitDate))}</span>
+                            <span>(${period.Duration} days)</span>
+                        </div>
+                    `).join('');
+
                     resultDiv.innerHTML = `
                         <div class="alert alert-success">
                             <h4>Stay Duration Results</h4>
+                            <div class="periods mb-3">
+                                ${periodsHtml}
+                            </div>
+                            <hr>
                             <p>Total Stay: ${result.TotalDays} days</p>
                             <p>Maximum Allowed: ${result.MaxAllowedDays} days</p>
                             <p>Remaining Days: ${result.RemainingDays} days</p>
