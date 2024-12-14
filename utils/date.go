@@ -13,9 +13,9 @@ func ParseDate(dateStr string) (time.Time, error) {
 	}
 
 	// Parse the date
-	date, err := time.Parse("2006-01-02", dateStr)
+	date, err := time.Parse("02/01/2006", dateStr)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid date format. Please use YYYY-MM-DD")
+		return time.Time{}, fmt.Errorf("invalid date format. Please use DD/MM/YYYY")
 	}
 
 	// Validate year range

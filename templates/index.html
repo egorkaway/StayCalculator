@@ -18,7 +18,9 @@
                     <div class="mb-3">
                         <label class="form-label">Visa Type</label>
                         <select name="visaType" class="form-select" required>
-                            <option value="tourist">Tourist (90 days)</option>
+                            <option value="tourist30">Tourist (30 days)</option>
+                            <option value="tourist90" selected>Tourist (90 days)</option>
+                            <option value="tourist120">Tourist (120 days)</option>
                             <option value="business">Business (180 days)</option>
                             <option value="student">Student (365 days)</option>
                         </select>
@@ -47,6 +49,18 @@
     </div>
 
     <script>
+        function formatDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function parseDate(dateStr) {
+            const [day, month, year] = dateStr.split('/');
+            return new Date(year, month - 1, day);
+        }
+
         document.getElementById('visaForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -56,8 +70,8 @@
             
             const data = {
                 visaType: this.visaType.value,
-                entryDate: entryDate.toISOString().split('T')[0],
-                exitDate: exitDate.toISOString().split('T')[0]
+                entryDate: formatDate(entryDate),
+                exitDate: formatDate(exitDate)
             };
             
             try {

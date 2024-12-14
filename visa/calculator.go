@@ -67,8 +67,12 @@ func (c *Calculator) CalculateStay(visaType, entryDateStr, exitDateStr string) (
 
 func getMaxAllowedDays(visaType string) int {
 	switch visaType {
-	case "tourist":
+	case "tourist30":
+		return 30
+	case "tourist90":
 		return 90
+	case "tourist120":
+		return 120
 	case "business":
 		return 180
 	case "student":
