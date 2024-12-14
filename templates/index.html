@@ -45,5 +45,59 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('visaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                visaType: formData.get('visaType'),
+                entryDate: formData.get('entryDate'),
+                exitDate: formData.get('exitDate')
+            };
+            
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <h4>Stay Duration Results</h4>
+                            <p>Total Stay: ${result.TotalDays} days</p>
+                            <p>Maximum Allowed: ${result.MaxAllowedDays} days</p>
+                            <p>Remaining Days: ${result.RemainingDays} days</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h4>Error</h4>
+                            <p>${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Error</h4>
+                        <p>Failed to calculate stay duration. Please try again.</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>
